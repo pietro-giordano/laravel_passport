@@ -4,24 +4,25 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
-use Exception;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Exception;
 use Illuminate\Support\Facades\Log;
 
 class AuthController extends Controller
 {
-    public function register(Request $request)
+    public function register(Request $request): JsonResponse
     {
         $request->validate([
+            'name' => 'required|min:6',
             'email' => 'required|email|unique:users',
-            'username' => 'required|min:6|max:32',
             'password' => 'required|confirmed|min:8'
         ]);
 
         try {
             User::create([
-                'name' => $request->username,
+                'name' => $request->name,
                 'email' => $request->email,
                 'password' => Hash::make($request->password)
             ]);
@@ -31,20 +32,12 @@ class AuthController extends Controller
                 'message' => 'User registered successfully',
             ], 201);
         } catch (Exception $e) {
-            Log::error('Error during user registration: ' . $e->getMessage());
+            Log::error('Error occurred during registration: ' . $e->getMessage());
 
             return response()->json([
                 'success' => false,
-                'message' => 'Registration failed. Please try again.',
-            ], 500);
+                'message' => $e->getMessage()
+            ]);
         }
-    }
-
-    public function login(Request $request)
-    {
-    }
-
-    public function logout()
-    {
     }
 }
